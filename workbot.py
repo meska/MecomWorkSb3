@@ -60,14 +60,15 @@ class Listener(threading.Thread):
         self.pubsub.subscribe(channels)
     
     def work(self, item):
-        log(INFO,item['data'].encode())
+        log(INFO,item['data'])
         # print(item['channel'], ":", item['data'])
     
     def run(self):
         for item in self.pubsub.listen():
             if item['data'] == "KILL":
                 self.pubsub.unsubscribe()
-                print(self, "unsubscribed and finished")
+                log(WARNING,'Killed!')
+                #print(self, "unsubscribed and finished")
                 break
             else:
                 self.work(item)
@@ -103,6 +104,19 @@ class MecomWorkSendToBotCommand(sublime_plugin.TextCommand):
             apiT = ApiThread(self, text, edit)
             apiT.start()
 
+class MecomWorkKillRedis(sublime_plugin.TextCommand):
+    def run(self, edit):
+        log(INFO, "Kill Connection")
+        r = redis.Redis(REDIS_SERVER)
+        r.publish('sublime_%s' % socket.gethostname(), 'KILL')
+
+class MecomWorkTestRedis(sublime_plugin.TextCommand):
+    def run(self, edit):
+        log(INFO, "Test Connection")
+        r = redis.Redis(REDIS_SERVER)
+        r.publish('sublime_%s' % socket.gethostname(), 'Test')
+
+
 
 def plugin_loaded():
     global SETTINGS
@@ -114,6 +128,8 @@ def plugin_loaded():
 
     SETTINGS = sublime.load_settings(SETTINGS_FILE)
 
-    r.publish('sublime_%s' % socket.gethostname(), 'this will reach the listener')
+    #r.publish('sublime_%s' % socket.gethostname(), 'this will reach the listener')
+
+    
 
 

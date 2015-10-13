@@ -2,5 +2,13 @@
     {
         "command": "mecom_work_send_to_bot_threaded",
         "caption": "Invia a MecomWork"
-    }
+    },
+    {
+        "command": "mecom_work_kill_redis",
+        "caption": "Kill Redis Thread"
+    }  ,
+    {
+        "command": "mecom_work_test_redis",
+        "caption": "Test Redis Thread"
+    }    
 ]
