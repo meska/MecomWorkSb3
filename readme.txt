@@ -1,1 +1,1 @@
-Plugin per sublime Text 2 , connessione api mecomwork
+Plugin per sublime Text 3 , connessione api mecomwork

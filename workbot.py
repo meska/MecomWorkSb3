@@ -5,6 +5,8 @@ import json
 import threading
 import sys,os
 import socket 
+import requests
+import getpass
 
 __version__ = '2.0.1'
 REDIS_SERVER = '192.168.2.4'
@@ -60,12 +62,13 @@ class Listener(threading.Thread):
         self.pubsub.subscribe(channels)
     
     def work(self, item):
-        log(INFO,item['data'])
+        if isinstance(item['data'],bytes):
+            print(item['data'].decode('utf-8'))
         # print(item['channel'], ":", item['data'])
     
     def run(self):
         for item in self.pubsub.listen():
-            if item['data'] == "KILL":
+            if item['data'] == b"KILL":
                 self.pubsub.unsubscribe()
                 log(WARNING,'Killed!')
                 #print(self, "unsubscribed and finished")
@@ -73,20 +76,6 @@ class Listener(threading.Thread):
             else:
                 self.work(item)
 
-def apiGet(api, **kwargs):
-    if kwargs:
-        data = parse.urlencode(kwargs)
-        binary_data = data.encode("utf-8")
-        #req = request.Request("http://192.168.2.2/api/%s/" % (api),binary_data)
-        result = request.urlopen("http://192.168.2.2/api/%s/" % (api),binary_data)
-    else:
-        #req = request.Request("http://192.168.2.2/api/%s/" % (api),None)
-        result = request.urlopen("http://192.168.2.2/api/%s/")
-    try:
-        return json.loads(result.readall().decode('utf-8'))
-    except Exception as e:
-        print(e)
-        return None
 
 
 class MecomWorkSendToBotCommand(sublime_plugin.TextCommand):
@@ -100,9 +89,21 @@ class MecomWorkSendToBotCommand(sublime_plugin.TextCommand):
                 text = self.view.word(selection)
 
             text = self.view.substr(selection)
-            print("invio comandi al bot...")
-            apiT = ApiThread(self, text, edit)
-            apiT.start()
+            
+            params = dict(
+                channel='sublime_%s' % socket.gethostname(),
+                user=getpass.getuser(),
+                text=text
+            )
+            r = requests.post("http://localhost:8000/bot/sublimeinput/",params,timeout=60)
+            if r.status_code == requests.codes.ok:
+                if r.text.startswith('ok'):
+                    print(r.text)
+                else:
+                    print("Comandi inviati a Work")
+            else:
+                log(ERROR,'Errore invio a Work, ripovare')
+                log(ERROR,r.text)
 
 class MecomWorkKillRedis(sublime_plugin.TextCommand):
     def run(self, edit):

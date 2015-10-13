@@ -1,6 +1,6 @@
 [
     {
-        "command": "mecom_work_send_to_bot_threaded",
+        "command": "mecom_work_send_to_bot",
         "caption": "Invia a MecomWork"
     },
     {
