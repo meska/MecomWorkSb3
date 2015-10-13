@@ -60,7 +60,8 @@ class Listener(threading.Thread):
         self.pubsub.subscribe(channels)
     
     def work(self, item):
-        print(item['channel'], ":", item['data'])
+        log(INFO,item['data'].encode())
+        # print(item['channel'], ":", item['data'])
     
     def run(self):
         for item in self.pubsub.listen():
@@ -113,5 +114,6 @@ def plugin_loaded():
 
     SETTINGS = sublime.load_settings(SETTINGS_FILE)
 
+    r.publish('sublime_%s' % socket.gethostname(), 'this will reach the listener')
 
 
