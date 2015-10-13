@@ -16,7 +16,9 @@ PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
 # add redis package to path
 sys.path.insert(0, os.path.join(PLUGIN_DIR, 'packages'))
 import redis
+from hashlib import sha224
 
+hostkey = sha224(("%s %s" % (getpass.getuser(),socket.gethostname())).encode()).hexdigest()
 
 # Log Levels
 DEBUG = 'DEBUG'
@@ -35,24 +37,6 @@ def log(lvl, message, *args, **kwargs):
         print('[WorkBot] [{lvl}] {msg}'.format(lvl=lvl, msg=msg))
     except RuntimeError:
         sublime.set_timeout(lambda: log(lvl, message, *args, **kwargs), 0)
-
-class ApiThread(threading.Thread):
-    def __init__(self, cmd,text, edit):
-        threading.Thread.__init__(self)
-        self.cmd = cmd
-        self.text = text
-        self.edit = edit
-
-    def run(self):
-        for chunk in self.text.splitlines():
-            apiRes = apiGet('bot', cmd=chunk.strip())
-            if apiRes:
-                if 'out' in apiRes:
-                    print("---------------------------------")
-                    for r in apiRes['out']:
-                        print(r)
-
-        #sublime.set_timeout(self.callback, 1) ovc
 
 class Listener(threading.Thread):
     def __init__(self, r, channels):
@@ -77,7 +61,6 @@ class Listener(threading.Thread):
                 self.work(item)
 
 
-
 class MecomWorkSendToBotCommand(sublime_plugin.TextCommand):
 
     def run(self, edit):
@@ -92,15 +75,17 @@ class MecomWorkSendToBotCommand(sublime_plugin.TextCommand):
             
             params = dict(
                 channel='sublime_%s' % socket.gethostname(),
-                user=getpass.getuser(),
+                user=hostkey,
                 text=text
             )
-            r = requests.post("http://localhost:8000/bot/sublimeinput/",params,timeout=60)
+            r = requests.post("http://work2.mecomsrl.com/bot/sublimeinput/",params,timeout=60)
+            # r = requests.post("http://localhost:8000/bot/sublimeinput/",params,timeout=60)
             if r.status_code == requests.codes.ok:
-                if r.text.startswith('ok'):
+                if not r.text.startswith('ok'):
                     print(r.text)
                 else:
                     print("Comandi inviati a Work")
+                    print("---------------------------------")
             else:
                 log(ERROR,'Errore invio a Work, ripovare')
                 log(ERROR,r.text)
