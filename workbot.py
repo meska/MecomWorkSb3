@@ -8,8 +8,8 @@ import socket
 import requests
 import getpass
 
-__version__ = '2.0.1'
-REDIS_SERVER = '192.168.2.4'
+__version__ = '2.0.2'
+REDIS_SERVER = 'redis.mecom.lan'
 SETTINGS_FILE = 'WorkBot.sublime-settings'
 SETTINGS = {}
 PLUGIN_DIR = os.path.dirname(os.path.realpath(__file__))
